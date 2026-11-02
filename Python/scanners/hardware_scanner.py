@@ -36,7 +36,7 @@ def get_hardware_info():
             
             elif windows_version == "7":
                 return "Windows 7"
-        elif platform.systems() == "Darwin":
+        elif platform.system() == "Darwin":
             mac_version = platform.mac_ver()[0]
             return mac_version
         else:
