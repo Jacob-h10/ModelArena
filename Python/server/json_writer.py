@@ -6,7 +6,7 @@ from gui import run_gui
 #writes the data from all the data
 
 
-def json_writer(choice, model_info):
+def json_writer(model_info):
     #initialize variables
     data = {}
     hardware_info = get_hardware_info()
