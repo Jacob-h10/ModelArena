@@ -12,12 +12,10 @@ def run_benchmark(choice):
     loaded_models = [model["name"] for model in data["models"]]
 
     if choice in loaded_models:
-        print("Models are loaded! Please unload the model and restart.")
-    else:
-        print("No models currently loaded.")
-
-    #time how long it takes to load model
+        return None, "Model is already loaded. Please unload it."
     #==========================================================
+    #time how long it takes to load model
+    #also make sure it is specifically VRAM not RAM
     requests.post(
     "http://localhost:11434/api/chat",
     json={
@@ -31,6 +29,12 @@ def run_benchmark(choice):
     #add to json to send to json_writer
     load_time = data["load_duration"] / 1_000_000_000
 
+    for model in data["models"]:
+        if model["name"] == choice:
+            if model["size_vram"] >= model["size"]:
+                print("model loaded into vram continuing")
+            else:
+                return None, "Model is not fully loaded into VRAM. Please reload."
     #==========================================================
     #find ttft innacurate for now 
     start_time = time.perf_counter()
@@ -68,5 +72,29 @@ def run_benchmark(choice):
     eval_duration = data.get("eval_duration")
     tokens_scalc = eval_count / (eval_duration / 1e9)
     tokens_second = f"{tokens_scalc:.2f} t/s"
-    #calculate sustained t/s
+    #=============================================================
+    #calculate sustained t/s with 10 messages averages, How fast it generates over repeated requests, including potential performance changes as the workload continues.
+    total_runs = 10
+    tokens_speeds = []
+    for i in range(total_runs):
+        response = requests.post(
+                "http://localhost:11434/api/chat",
+                json={
+                    "model": choice,
+                    "messages": [{"role": "user", "content": "explain to me how a microphone works in detail"}],
+                    "stream": False
+                },
+                stream=False
+            )
+        data = response.json()
+
+        eval_count = data.get("eval_count")
+        eval_duration = data.get("eval_duration")
+        tokens_scalc = eval_count / (eval_duration / 1e9)
+        #append values 
+        tokens_speeds.append(tokens_scalc)
+    average = sum(tokens_speeds) / len(tokens_speeds)
+    sustained_generation_tps_across_runs = f"{average:.2f} t/s"
+    #=============================================================
+
 

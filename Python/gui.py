@@ -1,11 +1,14 @@
+
 #UI for EXE
 import customtkinter as ctk
 from scanners.model_scanner import find_ollama
 from scanners.model_scanner import find_gguf
 from scanners.model_scanner import find_lm_studio
 
-def run_gui():
+def run_gui(error=None):
     choice = None
+    restart = False
+
     #appearence
     ctk.set_appearance_mode("dark")
     ctk.set_default_color_theme("blue")
@@ -15,10 +18,6 @@ def run_gui():
     app.title("ModelArena Benchmarks")
     app.geometry("600x400")
 
-    #grab models
-    models = find_ollama(), find_lm_studio(), find_gguf()
-    all_models = models[0] + models[1] + models[2]
-
     #title
     title = ctk.CTkLabel(
         app,
@@ -27,30 +26,54 @@ def run_gui():
     )
     title.pack(pady=30)
 
-    #dropdown selection
-    def selected_choice(choice):
-        print(f"selected model:{choice}")
-        return choice
+    if error:
+        error_label = ctk.CTkLabel(
+            app,
+            text=error
+        )
+        error_label.pack(pady=20)
 
-    model_dropdown = ctk.CTkOptionMenu(
-        app,
-        values=all_models,
-        command = selected_choice
-    )
-    model_dropdown.pack(pady=30)
+        #restart button
+        def restart_benchmark():
+            nonlocal restart
+            restart = True
+            app.destroy()
 
-    def confirm_choice():
-        nonlocal choice 
-        choice = model_dropdown.get()
-        print(f"Confirmed model: {choice}")
-        app.destroy()
+        restart_button = ctk.CTkButton(
+            app,
+            text="Restart Benchmark",
+            command=restart_benchmark,
+        )
+        restart_button.pack(pady=20)
 
-    confirm_button = ctk.CTkButton(
-        app,
-        text="Confirm Model",
-        command=confirm_choice
-    )
-    confirm_button.pack(pady=20)
+    else:
+        #grab models
+        models = find_ollama(), find_lm_studio(), find_gguf()
+        all_models = models[0] + models[1] + models[2]
+
+        #dropdown selection
+        def selected_choice(choice):
+            print(f"selected model:{choice}")
+
+        model_dropdown = ctk.CTkOptionMenu(
+            app,
+            values=all_models,
+            command=selected_choice
+        )
+        model_dropdown.pack(pady=30)
+
+        def confirm_choice():
+            nonlocal choice
+            choice = model_dropdown.get()
+            print(f"Confirmed model: {choice}")
+            app.destroy()
+
+        confirm_button = ctk.CTkButton(
+            app,
+            text="Confirm Model",
+            command=confirm_choice
+        )
+        confirm_button.pack(pady=20)
 
     app.mainloop()
-    return choice
+    return choice, restart

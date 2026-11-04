@@ -21,13 +21,22 @@ def model_identification(choice):
             )
 
             data = response.json()
+            print(data["model_info"].keys())
             model_info = {
                 "model": choice,
                 "architecture": data["model_info"]["general.architecture"],
                 "parameter": data["details"]["parameter_size"],
                 "quantization": data["details"]["quantization_level"],
-                "context_length": data["model_info"]["context_length"],
-                "kv_heads": data["model_info"]["attention.head_count_kv"],
+                "context_length": next(
+                    (value for key, value in data["model_info"].items()
+                    if key.endswith(".context_length")),
+                    None
+                ),
+                "kv_heads": next(
+                    (value for key, value in data["model_info"].items()
+                    if key.endswith(".attention.head_count_kv")),
+                    None
+                ),
                 "model license": data["license"]
             }
             print("Ollama identification successful!")
