@@ -21,7 +21,7 @@ def model_identification(choice):
             )
 
             data = response.json()
-            print(data["model_info"].keys())
+    
             model_info = {
                 "model": choice,
                 "architecture": data["model_info"]["general.architecture"],
