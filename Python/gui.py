@@ -4,6 +4,7 @@ import customtkinter as ctk
 from scanners.model_scanner import find_ollama
 from scanners.model_scanner import find_gguf
 from scanners.model_scanner import find_lm_studio
+from concurrent.futures import ThreadPoolExecutor
 
 def run_gui(error=None):
     choice = None
@@ -48,7 +49,14 @@ def run_gui(error=None):
 
     else:
         #grab models
-        models = find_ollama(), find_lm_studio(), find_gguf()
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures = [
+                executor.submit(find_ollama),
+                executor.submit(find_lm_studio),
+                executor.submit(find_gguf)
+            ]
+
+            models = [future.result() for future in futures]
         all_models = models[0] + models[1] + models[2]
 
         #dropdown selection

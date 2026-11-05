@@ -24,20 +24,18 @@ def model_identification(choice):
     
             model_info = {
                 "model": choice,
-                "architecture": data["model_info"]["general.architecture"],
-                "parameter": data["details"]["parameter_size"],
-                "quantization": data["details"]["quantization_level"],
+                "architecture": data.get("model_info", {}).get("general.architecture", "unknown"),
+                "parameter": data.get("details", {}).get("parameter_size", "unknown"),
+                "quantization": data.get("details", {}).get("quantization_level", "unknown"),
                 "context_length": next(
-                    (value for key, value in data["model_info"].items()
-                    if key.endswith(".context_length")),
-                    None
+                    (value for key, value in data.get("model_info", {}).items() if key.endswith(".context_length")),
+                    "unknown"
                 ),
                 "kv_heads": next(
-                    (value for key, value in data["model_info"].items()
-                    if key.endswith(".attention.head_count_kv")),
-                    None
+                    (value for key, value in data.get("model_info", {}).items() if key.endswith(".attention.head_count_kv")),
+                    "unknown"
                 ),
-                "model license": data["license"]
+                "model license": data.get("license", "unknown")
             }
             print("Ollama identification successful!")
             return model_info
