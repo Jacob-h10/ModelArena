@@ -38,7 +38,6 @@ def run_gui(error=None):
         def restart_benchmark():
             nonlocal restart
             restart = True
-            app.destroy()
 
         restart_button = ctk.CTkButton(
             app,
@@ -74,7 +73,6 @@ def run_gui(error=None):
             nonlocal choice
             choice = model_dropdown.get()
             print(f"Confirmed model: {choice}")
-            app.destroy()
 
         confirm_button = ctk.CTkButton(
             app,

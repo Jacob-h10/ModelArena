@@ -2,7 +2,8 @@
 # benchmarker to find data
 import time
 import requests
-
+import threading
+from memory_monitor import monitor_memory
 
 def run_benchmark(choice):
     # first checks if model is loaded in memory 
@@ -55,6 +56,19 @@ def run_benchmark(choice):
             break
     #===========================================================
     #calculate the t/s on first message
+    #and start thread tracking for ram usage
+    stop_event = threading.Event()
+    
+    #create thread
+    monitor_thread = threading.Thread(
+        target=monitor_memory,
+        args=(stop_event,)
+    )
+    
+    #start thread 
+    monitor_thread.start()
+
+
     start_time = time.perf_counter()    
         
     response = requests.post(
@@ -95,6 +109,10 @@ def run_benchmark(choice):
         tokens_speeds.append(tokens_scalc)
     average = sum(tokens_speeds) / len(tokens_speeds)
     sustained_generation_tps_across_runs = f"{average:.2f} t/s"
-    #=============================================================
+
+    #stop thread 
+    stop_event.set()
+    monitor_thread.join()
+
 
 
