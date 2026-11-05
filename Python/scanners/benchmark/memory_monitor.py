@@ -45,4 +45,6 @@ def monitor_memory(stop_event):
     #find the baseline
     average_ram = sum(ram_times) / len(ram_times)
 
-    return average_ram, peak_ram
+    ram_usage = {"average ram usage": average_ram, "peak ram usage": peak_ram}
+
+    return ram_usage

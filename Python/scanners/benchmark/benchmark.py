@@ -27,8 +27,6 @@ def run_benchmark(choice):
     )
 
     data = response.json()
-    #add to json to send to json_writer
-    load_time = data["load_duration"] / 1_000_000_000
 
     for model in data["models"]:
         if model["name"] == choice:
@@ -108,11 +106,20 @@ def run_benchmark(choice):
         #append values 
         tokens_speeds.append(tokens_scalc)
     average = sum(tokens_speeds) / len(tokens_speeds)
-    sustained_generation_tps_across_runs = f"{average:.2f} t/s"
+    average_generation_tps_across_runs = f"{average:.2f} t/s"
 
     #stop thread 
     stop_event.set()
     monitor_thread.join()
+
+    #=============================================================
+    #return data
+    benchmark_results = {
+        "time to first token": str(ttft),
+        "tokens per second": str(tokens_second), 
+        "average tokens per second": str(average_generation_tps_across_runs), 
+                         }
+    return benchmark_results
 
 
 
