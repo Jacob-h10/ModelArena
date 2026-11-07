@@ -1,4 +1,3 @@
-
 #entry-point for program
 #recieves submission, validates them, serves requests
 from pathlib import Path
@@ -6,6 +5,8 @@ from server.json_writer import json_writer
 from gui import run_gui
 from scanners.model_scanner import model_identification
 from scanners.benchmark.benchmark import run_benchmark
+# IMPORT: Pull the shared RAM dictionary so you can hand it to the json_writer
+from scanners.benchmark.memory_monitor import shared_ram_results
 
 def main():
 
@@ -39,7 +40,7 @@ def main():
             print("faild to indentify model")
             return
 
-        json_writer(choice, model_info)
+        json_writer(model_info, benchmark_results, shared_ram_results)
 
         print("results writter")
         return

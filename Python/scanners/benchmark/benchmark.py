@@ -4,6 +4,7 @@ import time
 import requests
 import threading
 from memory_monitor import monitor_memory
+from memory_monitor import baseline_monitor
 
 def run_benchmark(choice):
     # first checks if model is loaded in memory 
@@ -35,36 +36,64 @@ def run_benchmark(choice):
             else:
                 return None, "Model is not fully loaded into VRAM. Please reload."
     #==========================================================
-    #find ttft innacurate for now 
+    #find ttl 
     start_time = time.perf_counter()
 
     response = requests.post(
-        "http://localhost:11434/api/chat",
+        "http://localhost:11434/api/generate",
         json={
             "model": choice,
-            "messages": [{"role": "user", "content": "Hello"}],
-            "stream": True
+            "prompt": "",
+            "keep_alive": -1
         },
-        stream=True
     )
+    ttl = time.perf_counter() - start_time
 
+    #===========================================================
+    #find baseline then ttft
+    stop_event = threading.Event()
+
+    baseline = threading.Thread(
+        target=baseline_monitor,
+        args=(stop_event,)
+    )
+    #start thread
+    baseline.start()
+    #measure baseline 
+    #peak will be the baseline
+    time.sleep(10)
+    stop_event.set()
+    baseline.join()
+
+    start_time = time.perf_counter()
+
+    response = requests.post(
+            "http://localhost:11434/api/chat",
+            json={
+                "model": choice,
+                "messages": [{"role": "user", "content": "Hello"}],
+                "stream": True
+            },
+        )
+    
     for chunk in response.iter_lines():
         if chunk:
             ttft = time.perf_counter() - start_time
             break
+    
     #===========================================================
     #calculate the t/s on first message
     #and start thread tracking for ram usage
-    stop_event = threading.Event()
+    
     
     #create thread
-    monitor_thread = threading.Thread(
+    peak_average = threading.Thread(
         target=monitor_memory,
         args=(stop_event,)
     )
     
     #start thread 
-    monitor_thread.start()
+    peak_average.start()
 
 
     start_time = time.perf_counter()    
@@ -110,7 +139,7 @@ def run_benchmark(choice):
 
     #stop thread 
     stop_event.set()
-    monitor_thread.join()
+    peak_average.join()
 
     #=============================================================
     #return data
